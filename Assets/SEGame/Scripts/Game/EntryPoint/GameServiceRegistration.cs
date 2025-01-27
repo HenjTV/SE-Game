@@ -3,7 +3,7 @@ using SkyForge;
 
 namespace SEGame
 {
-    public static class GameService
+    public static class GameServiceRegistration
     {
         public static void RegisterService(DIContainer container)
         {

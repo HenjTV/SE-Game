@@ -36,7 +36,7 @@ namespace SEGame
 
         private void Init()
         {
-            GameService.RegisterService(m_rootContainer);
+            GameServiceRegistration.RegisterService(m_rootContainer);
             
             //Init Coroutines
             m_coroutines = new GameObject("[COROUTINES]").AddComponent<Coroutines>();

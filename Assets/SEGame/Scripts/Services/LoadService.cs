@@ -6,6 +6,7 @@ namespace SEGame
     public class LoadService : System.IDisposable
     {
         public const string PREFAB_UI_ROOT = "Prefabs/UI/UIRoot";
+        public const string PREFAB_UI_MENU = "Prefabs/UI/UIMenu";
         public void Dispose()
         {
             
