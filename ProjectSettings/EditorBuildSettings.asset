@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/SEGame/Scenes/MainMenu.unity
     guid: 98257aa78f82b074ea6df49034505324
+  - enabled: 1
+    path: Assets/SEGame/Scenes/Gameplay.unity
+    guid: a8ff2c0b5df23d64dac9a654496792cf
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

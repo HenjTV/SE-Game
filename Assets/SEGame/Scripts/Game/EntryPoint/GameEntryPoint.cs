@@ -44,16 +44,56 @@ namespace SEGame
             m_rootContainer.RegisterInstance(m_coroutines);
             UnityEngine.Object.DontDestroyOnLoad(m_coroutines);
             
-            RegisterViewModel(m_rootContainer);
-            BindView(m_rootContainer);
-            
             var sceneService = m_rootContainer.Resolve<SceneService>();
             sceneService.LoadSceneEvent += OnLoadScene;
             
+#if DEDICATED_SERVER
+            var defaultServerEnterParams = new ServerEnterParams();
+            m_coroutines.StartCoroutine(LoadAndStartServer(defaultServerEnterParams));
+#else
+
+            RegisterViewModel(m_rootContainer);
+            BindView(m_rootContainer);
+            
             var defaultMainMenuEnterParams = new MainMenuEnterParams();
             m_coroutines.StartCoroutine(LoadAndStartMainMenu(defaultMainMenuEnterParams));
+#endif
         }
         
+        private void OnLoadScene(Scene scene, LoadSceneMode loadSceneMode, SceneEnterParams sceneEnterParams)
+        {
+            var sceneName = scene.name;
+#if DEDICATED_SERVER
+            if(sceneName.Equals(SceneService.SERVER_SCENE))
+                m_coroutines.StartCoroutine(LoadServer(sceneEnterParams));
+#else
+            if (sceneName.Equals(SceneService.BOOTSTRAP_SCENE))
+                LoadBootstrapScene();
+            else if (sceneName.Equals(SceneService.MAIN_MENU_SCENE))
+                m_coroutines.StartCoroutine(LoadMainMenu(sceneEnterParams));
+            else if (sceneName.Equals(SceneService.GAMEPLAY_SCENE))
+                m_coroutines.StartCoroutine(LoadGameplay(sceneEnterParams));
+#endif
+        }
+        
+#if DEDICATED_SERVER
+        private IEnumerator LoadServer(SceneEnterParams sceneEnterParams)
+        {
+            var serverContainer = new DIContainer(m_rootContainer);
+
+            var serverEntryPoint = UnityExtention.GetEntryPoint<ServerEntryPoint>();
+            
+            yield return serverEntryPoint.Intialization(serverContainer, sceneEnterParams);
+
+            serverEntryPoint.Run();
+        }
+
+        private IEnumerator LoadAndStartServer(ServerEnterParams serverEnterParams)
+        {
+            var sceneService = m_rootContainer.Resolve<SceneService>();
+            yield return sceneService.LoadServerScene(serverEnterParams);
+        }
+#else 
         private void RegisterViewModel(DIContainer container)
         {
             container.RegisterSingleton<IUIRootViewModel>(factory => new UIRootViewModel());
@@ -72,18 +112,6 @@ namespace SEGame
             uIRootView.Bind(uIRootViewModel);
         }
         
-        private void OnLoadScene(Scene scene, LoadSceneMode loadSceneMode, SceneEnterParams sceneEnterParams)
-        {
-            var sceneName = scene.name;
-            
-            if (sceneName.Equals(SceneService.BOOTSTRAP_SCENE))
-                LoadBootstrapScene();
-            else if (sceneName.Equals(SceneService.MAIN_MENU_SCENE))
-                m_coroutines.StartCoroutine(LoadMainMenu(sceneEnterParams));
-            else if (sceneName.Equals(SceneService.GAMEPLAY_SCENE))
-                m_coroutines.StartCoroutine(LoadGameplay(sceneEnterParams));
-        }
-
         private void LoadBootstrapScene()
         {
             var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
@@ -136,5 +164,7 @@ namespace SEGame
             var sceneService = m_rootContainer.Resolve<SceneService>();
             yield return sceneService.LoadGameplayScene(gameplayEnterParams);
         }
+        
+#endif
     }
 }
