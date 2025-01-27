@@ -11,6 +11,8 @@ namespace SEGame
     public class GameEntryPoint
     {
         private static GameEntryPoint m_instance;
+        
+        
         private DIContainer m_rootContainer;
         private Coroutines m_coroutines;
         
@@ -36,7 +38,7 @@ namespace SEGame
         {
             GameService.RegisterService(m_rootContainer);
             
-            //init Coroutines
+            //Init Coroutines
             m_coroutines = new GameObject("[COROUTINES]").AddComponent<Coroutines>();
             m_rootContainer.RegisterInstance(m_coroutines);
             UnityEngine.Object.DontDestroyOnLoad(m_coroutines);
@@ -53,12 +55,20 @@ namespace SEGame
         
         private void RegisterViewModel(DIContainer container)
         {
-            
+            container.RegisterSingleton<IUIRootViewModel>(factory => new UIRootViewModel());
         }
 
         private void BindView(DIContainer container)
         {
             var loadService = container.Resolve<LoadService>();
+            
+            //Init UIRoot
+            var prefab = loadService.LoadPrefab<UIRootView>(LoadService.PREFAB_UI_ROOT);
+            var uIRootView = UnityEngine.Object.Instantiate(prefab);
+            UnityEngine.Object.DontDestroyOnLoad(uIRootView);
+            
+            var uIRootViewModel = container.Resolve<IUIRootViewModel>();
+            uIRootView.Bind(uIRootViewModel);
         }
         
         private void OnLoadScene(Scene scene, LoadSceneMode loadSceneMode, SceneEnterParams sceneEnterParams)
@@ -74,7 +84,9 @@ namespace SEGame
 
         private void LoadBootstrapScene()
         {
+            var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
             
+            uIRootViewModel.ShowLoadingScreen();
         }
 
         private IEnumerator LoadMainMenu(SceneEnterParams sceneEnterParams)
@@ -86,6 +98,9 @@ namespace SEGame
             yield return mainMenuEntryPoint.Intialization(mainMenuContainer, sceneEnterParams);
             
             mainMenuEntryPoint.Run();
+            
+            var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
+            uIRootViewModel.HideLoadingScreen();
         }
         
         private IEnumerator LoadAndStartMainMenu(MainMenuEnterParams mainMenuEnterParams)

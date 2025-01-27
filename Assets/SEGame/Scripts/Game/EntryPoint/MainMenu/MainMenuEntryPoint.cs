@@ -13,8 +13,8 @@ namespace SEGame
         
         public IEnumerator Intialization(DIContainer parentContainer, SceneEnterParams sceneEnterParams)
         {
-            Debug.Log("Init MainMenu");
-            yield return null;
+            
+            yield return new WaitForSeconds(2f);
         }
 
         public IObservable<SceneExitParams> Run()
