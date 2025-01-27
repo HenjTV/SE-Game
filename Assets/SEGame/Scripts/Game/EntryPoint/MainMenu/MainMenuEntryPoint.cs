@@ -33,7 +33,8 @@ namespace SEGame
 
         private void LoadGamePlayParams(object sender)
         {
-            Debug.Log("Change Scene to game play scene");
+            var gameplayEnterParams = new GameplayEnterParams();
+            m_menuExitParams.Value = new MainMenuExitParams(gameplayEnterParams);
         }
 
         private void OnDestroy()

@@ -2,6 +2,7 @@
 using UnityEngine.SceneManagement;
 using System.Collections;
 using SkyForge.Extention;
+using SkyForge.Reactive.Extention;
 using UnityEngine;
 using SkyForge;
 using System;
@@ -79,7 +80,8 @@ namespace SEGame
                 LoadBootstrapScene();
             else if (sceneName.Equals(SceneService.MAIN_MENU_SCENE))
                 m_coroutines.StartCoroutine(LoadMainMenu(sceneEnterParams));
-
+            else if (sceneName.Equals(SceneService.GAMEPLAY_SCENE))
+                m_coroutines.StartCoroutine(LoadGameplay(sceneEnterParams));
         }
 
         private void LoadBootstrapScene()
@@ -97,7 +99,27 @@ namespace SEGame
             
             yield return mainMenuEntryPoint.Intialization(mainMenuContainer, sceneEnterParams);
             
-            mainMenuEntryPoint.Run();
+            mainMenuEntryPoint.Run().Subscribe(sceneExitParams =>
+            {
+                if (sceneExitParams.TargetEnterParams is GameplayEnterParams gameplayEnterParams)
+                {
+                    m_coroutines.StartCoroutine(LoadAndStartGameplay(gameplayEnterParams));
+                }
+            });
+            
+            var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
+            uIRootViewModel.HideLoadingScreen();
+        }
+
+        private IEnumerator LoadGameplay(SceneEnterParams sceneEnterParams)
+        {
+            var gameplayContainer = new DIContainer(m_rootContainer);
+
+            var gameplayEntryPoint = UnityExtention.GetEntryPoint<GameplayEntryPoint>();
+            
+            yield return gameplayEntryPoint.Intialization(gameplayContainer, sceneEnterParams);
+            
+            gameplayEntryPoint.Run();
             
             var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
             uIRootViewModel.HideLoadingScreen();
@@ -106,8 +128,13 @@ namespace SEGame
         private IEnumerator LoadAndStartMainMenu(MainMenuEnterParams mainMenuEnterParams)
         {   
             var sceneService = m_rootContainer.Resolve<SceneService>();
-            yield return sceneService.LoadMainMenuScene();
+            yield return sceneService.LoadMainMenuScene(mainMenuEnterParams);
         }
-        
+
+        private IEnumerator LoadAndStartGameplay(GameplayEnterParams gameplayEnterParams)
+        {
+            var sceneService = m_rootContainer.Resolve<SceneService>();
+            yield return sceneService.LoadGameplayScene(gameplayEnterParams);
+        }
     }
 }
