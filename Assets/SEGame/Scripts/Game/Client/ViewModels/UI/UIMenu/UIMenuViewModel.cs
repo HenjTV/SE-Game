@@ -2,6 +2,10 @@
 using System;
 using SkyForge.MVVM;
 
+#if !UNITY_EDITOR
+using UnityEngine;
+#endif
+
 namespace SEGame
 {
     public class UIMenuViewModel : IUIMenuViewModel
@@ -15,7 +19,7 @@ namespace SEGame
         
         public void Update(float deltaTime)
         {
-             
+            
         }
 
         public void PhysicsUpdate(float deltaTime)

@@ -1,8 +1,8 @@
 
 using UnityEngine.SceneManagement;
+using SkyForge.Reactive.Extention;
 using System.Collections;
 using SkyForge.Extention;
-using SkyForge.Reactive.Extention;
 using UnityEngine;
 using SkyForge;
 using System;
@@ -12,7 +12,6 @@ namespace SEGame
     public class GameEntryPoint
     {
         private static GameEntryPoint m_instance;
-        
         
         private DIContainer m_rootContainer;
         private Coroutines m_coroutines;
@@ -46,8 +45,9 @@ namespace SEGame
             
             var sceneService = m_rootContainer.Resolve<SceneService>();
             sceneService.LoadSceneEvent += OnLoadScene;
-            
+
 #if DEDICATED_SERVER
+
             var defaultServerEnterParams = new ServerEnterParams();
             m_coroutines.StartCoroutine(LoadAndStartServer(defaultServerEnterParams));
 #else
@@ -63,6 +63,7 @@ namespace SEGame
         private void OnLoadScene(Scene scene, LoadSceneMode loadSceneMode, SceneEnterParams sceneEnterParams)
         {
             var sceneName = scene.name;
+            
 #if DEDICATED_SERVER
             if(sceneName.Equals(SceneService.SERVER_SCENE))
                 m_coroutines.StartCoroutine(LoadServer(sceneEnterParams));
@@ -145,10 +146,12 @@ namespace SEGame
 
             var gameplayEntryPoint = UnityExtention.GetEntryPoint<GameplayEntryPoint>();
             
+            Debug.Log("Test game 1");
+            
             yield return gameplayEntryPoint.Intialization(gameplayContainer, sceneEnterParams);
             
             gameplayEntryPoint.Run();
-            
+            Debug.Log("Test game 2");
             var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
             uIRootViewModel.HideLoadingScreen();
         }

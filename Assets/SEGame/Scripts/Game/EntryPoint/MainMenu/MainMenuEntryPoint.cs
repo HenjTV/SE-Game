@@ -20,7 +20,9 @@ namespace SEGame
             
             MainMenuServiceRegistration.Register(m_container, mainMenuEnterParams);
             MainMenuViewModelRegistration.Register(m_container, mainMenuEnterParams);
+            
             m_container.RegisterSingleton<IUIMenuViewModel>(factory => new UIMenuViewModel(LoadGamePlayParams));
+            
             MainMenuViewRegistration.BindView(m_container);
             
             yield return null;

@@ -19,13 +19,14 @@ namespace SEGame
             var serverEnterParams = sceneEnterParams as ServerEnterParams;
             m_container = parentContainer;
             
+            ServerServiceRegistration.Register(m_container, serverEnterParams);
+            
             m_networkManager = NetworkManager.Singleton;
             yield return null;
         }
         
         public IObservable<SceneExitParams> Run()
         {
-            Debug.Log("Run Server");
             if(m_networkManager.StartServer())
                 Debug.Log("Server started");
             
