@@ -49,6 +49,12 @@ namespace SEGame
 #if DEDICATED_SERVER
 
             var defaultServerEnterParams = new ServerEnterParams();
+            
+            m_rootContainer.RegisterSingleton<IServerStateProvider>(factory => new ServerStateProvider());
+            
+            var serverStateProvider = m_rootContainer.Resolve<IServerStateProvider>();
+            serverStateProvider.LoadState();
+            
             m_coroutines.StartCoroutine(LoadAndStartServer(defaultServerEnterParams));
 #else
 
@@ -146,12 +152,11 @@ namespace SEGame
 
             var gameplayEntryPoint = UnityExtention.GetEntryPoint<GameplayEntryPoint>();
             
-            Debug.Log("Test game 1");
             
             yield return gameplayEntryPoint.Intialization(gameplayContainer, sceneEnterParams);
             
             gameplayEntryPoint.Run();
-            Debug.Log("Test game 2");
+            
             var uIRootViewModel = m_rootContainer.Resolve<IUIRootViewModel>();
             uIRootViewModel.HideLoadingScreen();
         }

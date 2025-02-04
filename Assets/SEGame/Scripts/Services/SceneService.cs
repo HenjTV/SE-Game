@@ -7,7 +7,7 @@ namespace SEGame
     public class SceneService : BaseSceneService
     {
 #if DEDICATED_SERVER
-        public const string SERVER_SCENE = "Server";
+        public const string SERVER_SCENE = "Gameplay";
 #else
         public const string BOOTSTRAP_SCENE = "Bootstrap";
         public const string MAIN_MENU_SCENE = "MainMenu";

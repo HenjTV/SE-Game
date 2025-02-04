@@ -7,6 +7,8 @@ namespace SEGame
     public interface IUILogViewModel : IViewModel
     {
         ReactiveProperty<string> MessageLog { get; }
+        void LogMessage(string name, string message);
+
         void LogMessage(string message);
     } 
 }

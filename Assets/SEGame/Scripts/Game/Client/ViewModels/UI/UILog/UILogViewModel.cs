@@ -22,6 +22,11 @@ namespace SEGame
             
         }
         
+        public void LogMessage(string name, string message)
+        {
+            MessageLog.Value = name + ":> " + message;
+        }
+
         public void LogMessage(string message)
         {
             MessageLog.Value = message;
