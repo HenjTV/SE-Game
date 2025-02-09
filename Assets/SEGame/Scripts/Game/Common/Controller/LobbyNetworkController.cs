@@ -12,39 +12,32 @@ namespace SEGame
         private LobbyService m_lobbyService;
         private IUILogViewModel m_uILogViewModel;
 
-        private ulong m_clientId;
+        private ServerEntryPoint m_serverEntryPoint;
+        private ulong m_localClientId;
         
 #if DEDICATED_SERVER
         
-        public void Init(LobbyService lobbyService, IUILogViewModel uILogViewModel, ulong clientId)
+        public void Init(LobbyService lobbyService, IUILogViewModel uILogViewModel, ulong clientId, ServerEntryPoint serverEntryPoint)
         {
             m_lobbyService = lobbyService;
             m_uILogViewModel = uILogViewModel;
-            m_clientId = clientId;
-        }
-
-        public override void OnNetworkSpawn()
-        {
-            if (!IsServer)
-                return;
+            m_localClientId = clientId;
             
-            foreach (var connectedClientId in NetworkManager.Singleton.ConnectedClients.Keys)
-            {
-                if(connectedClientId != m_clientId)
-                    gameObject.GetComponent<NetworkObject>().NetworkHide(connectedClientId);
-            }
+            m_serverEntryPoint = serverEntryPoint;
         }
 #else
         public override void OnNetworkSpawn()
         {
-            if (IsServer || !IsOwner)
+            if (IsServer)
                 return;
             
             var gameplayEntryPoint = UnityExtention.GetEntryPoint<GameplayEntryPoint>() as GameplayEntryPoint;
             var gameplayContainer = gameplayEntryPoint?.GetContainer();
             m_uILogViewModel = gameplayContainer?.Resolve<IUILogViewModel>();
             
-            gameplayContainer?.RegisterInstance(this);
+            if(IsOwner)
+                gameplayContainer?.RegisterInstance(this);
+            
             base.OnNetworkSpawn();
         }
 
@@ -73,18 +66,25 @@ namespace SEGame
                 var notifyClientRpcParams = CreateClientRpcParams(new List<ulong>() { currentClientId });
                 
                 FailedToAddedPlayerInLobbyClientRpc(notifyClientRpcParams);
-                
                 m_uILogViewModel.LogMessage("server","search lobby failed");
+                return;
             }
-
+            
             if (m_lobbyService.GetFirstClientId(lobbyId, out var firstClientId))
             {
+                
+                m_serverEntryPoint.ShowLobbyNetworkController(currentClientId, firstClientId);
+                m_serverEntryPoint.ShowLobbyNetworkController(firstClientId, currentClientId);
+                
                 var successClientRpcParams = CreateClientRpcParams(new List<ulong>() { currentClientId, firstClientId });
-            
-                FindLobbyClientRpc(firstClientId, currentClientId, successClientRpcParams);
+                
+                FindLobbyClientRpc(successClientRpcParams);
             
                 m_uILogViewModel.LogMessage("server",$"search lobby Success users: {currentClientId}, {firstClientId}");
+                return;
             }
+            
+            m_uILogViewModel.LogMessage("server","search lobby failed");
         }
 
         [ServerRpc]
@@ -112,10 +112,9 @@ namespace SEGame
         }
 
         [ClientRpc]
-        public void FindLobbyClientRpc(ulong firstClientId, ulong secondClientId, ClientRpcParams clientRpcParams)
+        public void FindLobbyClientRpc(ClientRpcParams clientRpcParams)
         {
-            if(firstClientId.Equals(NetworkManager.Singleton.LocalClientId) || secondClientId.Equals(NetworkManager.Singleton.LocalClientId))
-                m_uILogViewModel.LogMessage($"user {NetworkManager.Singleton.LocalClientId}","find lobby in server");
+            m_uILogViewModel.LogMessage($"user {NetworkManager.Singleton.LocalClientId}","find lobby in server");
         }
 
         [ClientRpc]
@@ -155,6 +154,7 @@ namespace SEGame
             return clientRpcParams;
         }
 
+        
         public void Dispose()
         {
             

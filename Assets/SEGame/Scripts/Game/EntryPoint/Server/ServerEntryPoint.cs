@@ -21,13 +21,13 @@ namespace SEGame
         private NetworkManager m_networkManager;
         private DIContainer m_container;
 
-        private List<NetworkObject> m_spawnedLobbyNetworkController;
+        private Dictionary<ulong, NetworkObject> m_spawnedLobbyNetworkController;
         public IEnumerator Intialization(DIContainer parentContainer, SceneEnterParams sceneEnterParams)
         {
             var serverEnterParams = sceneEnterParams as ServerEnterParams;
             m_container = parentContainer;
 
-            m_spawnedLobbyNetworkController = new List<NetworkObject>();
+            m_spawnedLobbyNetworkController = new Dictionary<ulong, NetworkObject>();
             
             ServerServiceRegistration.Register(m_container, serverEnterParams);
             RegisterViewModel(m_container);
@@ -55,11 +55,7 @@ namespace SEGame
         {
             
 #if DEDICATED_SERVER
-            foreach (var currentNetworkObject in m_spawnedLobbyNetworkController)
-            {
-                currentNetworkObject.NetworkHide(clientId);
-            }
-
+            
             var networkObject = Instantiate(m_networkLobbyControllerPrefab).GetComponent<NetworkObject>();
             networkObject.gameObject.name = $"LobbyNetworkController:user-{clientId}";
             
@@ -67,12 +63,16 @@ namespace SEGame
             
             var lobbyService = m_container.Resolve<LobbyService>();
             var uILogViewModel = m_container.Resolve<IUILogViewModel>();
-            lobbyNetworkController.Init(lobbyService, uILogViewModel, clientId);
-
+            lobbyNetworkController.Init(lobbyService, uILogViewModel, clientId, this);
             networkObject.SpawnAsPlayerObject(clientId);
+            networkObject.NetworkShow(clientId);
             
-            m_spawnedLobbyNetworkController.Add(networkObject);
+            m_spawnedLobbyNetworkController[clientId] = networkObject;
 #endif
+        }
+        public void ShowLobbyNetworkController(ulong controllerClientId, ulong clientId)
+        {
+            m_spawnedLobbyNetworkController[controllerClientId].NetworkShow(clientId);
         }
         
         //for test
